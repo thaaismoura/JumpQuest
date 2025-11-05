@@ -3,17 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pixel Quest</title>
+    <title>JumpQuest</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div id="game-root">
-      <canvas id="game" aria-label="Plataforma 2D pixel art"></canvas>
+      <canvas id="game" aria-label="Jogo de plataforma 2D em pixel-art"></canvas>
 
-      <!-- Overlay inicial para liberar áudio em mobile -->
+      <!-- HUD -->
+      <div id="hud">
+        <span id="ui-level">Fase 1</span>
+        <span id="ui-coins">Moedas: 0</span>
+        <span id="ui-lives">Vidas: 3</span>
+      </div>
+
+      <!-- Overlay para liberar áudio em mobile -->
       <div id="start" class="overlay show">
         <div class="card">
-          <h1>Pixel Quest</h1>
+          <h1>JumpQuest</h1>
           <p>Toque para começar</p>
           <button id="btnStart">Começar</button>
           <label class="row">
@@ -23,13 +30,6 @@
         </div>
       </div>
 
-      <!-- HUD -->
-      <div id="hud">
-        <span id="ui-level">Fase 1</span>
-        <span id="ui-coins">Moedas: 0</span>
-        <span id="ui-lives">Vidas: 3</span>
-      </div>
-
       <!-- Controles touch (somem no desktop) -->
       <div id="touch">
         <button id="btnLeft" aria-label="Esquerda">◀</button>
@@ -37,6 +37,7 @@
         <button id="btnJump" class="jump" aria-label="Pular">⭡</button>
       </div>
 
+      <!-- Música (adicione seu arquivo em assets/music/theme.mp3) -->
       <audio id="music" src="assets/music/theme.mp3" preload="auto" loop></audio>
     </div>
 
