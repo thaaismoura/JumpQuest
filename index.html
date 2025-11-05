@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Pixel Runner</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="game-root">
+<canvas id="game" aria-label="Jogo estilo plataforma em pixel art" role="img"></canvas>
+
+
+<!-- Overlay de início para desbloquear áudio em mobile -->
+<div id="start-overlay" class="overlay show" tabindex="0" role="button" aria-label="Toque para começar">
+<div class="card">
+<h1>Pixel Runner</h1>
+<p>Toque para começar</p>
+<button id="btn-start">Começar</button>
+<label class="sound">
+<input type="checkbox" id="chk-music" checked /> Música
+</label>
+</div>
+</div>
+
+
+<!-- Controles touch (somem no desktop) -->
+<div id="touch-controls" aria-hidden="true">
+<button class="btn" id="btn-left" aria-label="Esquerda">◀</button>
+<button class="btn" id="btn-right" aria-label="Direita">▶</button>
+<button class="btn jump" id="btn-jump" aria-label="Pular">⭡</button>
+</div>
+
+
+<!-- Áudio (música de fundo) -->
+<audio id="music" src="assets/music/theme.mp3" preload="auto" loop></audio>
+</div>
+
+
+<script defer src="game.js"></script>
+</body>
+</html>
