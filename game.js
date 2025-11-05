@@ -1,65 +1,121 @@
-/* Pixel Runner — plataforma em pixel art
-function spike(x,y){
-ctx.fillStyle = '#444'; rect(x,y,1,1);
-ctx.fillStyle = '#e5e7eb';
-// três triângulos simples
-tri(x*TILE+2, y*TILE+14, x*TILE+6, y*TILE+2, x*TILE+10, y*TILE+14);
-tri(x*TILE+6, y*TILE+14, x*TILE+10, y*TILE+2, x*TILE+14, y*TILE+14);
-}
-function flag(x,y){
-// poste
-ctx.fillStyle = '#6b7280'; rect(x+0.1,y-2,0.2,3);
-// bandeira
-ctx.fillStyle = '#22c55e'; rect(x+0.3,y-1.7,0.8,0.6);
-ctx.fillStyle = '#16a34a'; rect(x+0.9,y-1.7,0.3,0.6);
-}
-function drawBanner(text){
-ctx.save();
-ctx.scale(s,s);
-ctx.fillStyle = 'rgba(0,0,0,.5)';
-ctx.fillRect(2,2, W*TILE-4, 20);
-ctx.fillStyle = '#fff';
-ctx.font = '10px monospace';
-ctx.textBaseline = 'top';
-ctx.fillText(text, 8, 6);
-ctx.restore();
-}
-function rect(x,y,w,h){
-ctx.fillRect(Math.floor(x*TILE* s), Math.floor(y*TILE* s), Math.ceil(w*TILE* s), Math.ceil(h*TILE* s));
-}
-function px(x,y){ ctx.fillRect(Math.floor(x*state.scale), Math.floor(y*state.scale), Math.ceil(1*state.scale), Math.ceil(1*state.scale)); }
-function tri(x1,y1,x2,y2,x3,y3){
-ctx.beginPath();
-ctx.moveTo(Math.floor(x1*state.scale), Math.floor(y1*state.scale));
-ctx.lineTo(Math.floor(x2*state.scale), Math.floor(y2*state.scale));
-ctx.lineTo(Math.floor(x3*state.scale), Math.floor(y3*state.scale));
-ctx.closePath();
-ctx.fill();
-}
-}
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const startOverlay = document.getElementById('start-overlay');
+  const btnStart = document.getElementById('btn-start');
+  const chkMusic = document.getElementById('chk-music');
+  const music = document.getElementById('music');
 
+  const TILE = 16;
+  const GRAV = 0.33;
+  const MOVE = 0.6;
+  const JUMP_VY = -6;
+  const MAX_VX = 2.4;
+  const MAX_VY = 10;
 
-// ======= Loop =======
-function loop(){
-state.t++;
-if (state.started && !state.won) step();
-draw();
-requestAnimationFrame(loop);
-}
+  const levelStr = [
+    "################################",
+    "#..............................#",
+    "#............??................#",
+    "#...............####...........#",
+    "#..................#...........#",
+    "#.....S............#...........#",
+    "#............P.............E...#",
+    "#..........#####...............#",
+    "#.....................###......#",
+    "#.............E................#",
+    "#.......######.................#",
+    "#.........................G....#",
+    "################################",
+  ];
 
+  const H = levelStr.length;
+  const W = levelStr[0].length;
+  const map = levelStr.map(r => r.split(''));
 
-// ======= Início / música =======
-btnStart.addEventListener('click', async () => {
-state.started = true;
-startOverlay.classList.remove('show');
-try { if (chkMusic.checked) await music.play(); } catch (e) { /* ignore */ }
-});
-chkMusic.addEventListener('change', () => {
-if (!state.started) return;
-if (chkMusic.checked) music.play(); else music.pause();
-});
+  let spawn = { x: 0, y: 0 };
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (map[y][x] === 'S') { spawn = { x, y }; map[y][x] = '.'; }
+    }
+  }
 
+  const player = { x: spawn.x * TILE + 8, y: spawn.y * TILE, vx: 0, vy: 0, onGround: false };
+  const keys = { left: false, right: false, jump: false };
 
-// Começa o loop imediatamente (mas o jogo só inicia quando clica)
-loop();
+  window.addEventListener('keydown', e => {
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = true;
+  });
+  window.addEventListener('keyup', e => {
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = false;
+  });
+
+  const s = 2;
+  canvas.width = W * TILE * s;
+  canvas.height = H * TILE * s;
+  ctx.imageSmoothingEnabled = false;
+
+  function solid(c) { return c === '#' || c === 'P'; }
+  function deadly(c) { return c === 'E'; }
+
+  function step() {
+    if (keys.left) player.vx -= MOVE;
+    if (keys.right) player.vx += MOVE;
+    if (keys.jump && player.onGround) { player.vy = JUMP_VY; player.onGround = false; }
+
+    player.vy += GRAV;
+    if (player.vx > MAX_VX) player.vx = MAX_VX;
+    if (player.vx < -MAX_VX) player.vx = -MAX_VX;
+    if (player.vy > MAX_VY) player.vy = MAX_VY;
+
+    player.x += player.vx;
+    player.y += player.vy;
+
+    const tx = Math.floor(player.x / TILE);
+    const ty = Math.floor(player.y / TILE);
+    const tile = map[ty]?.[tx] || '#';
+
+    if (solid(tile)) { player.vy = 0; player.onGround = true; }
+    if (deadly(tile)) { player.x = spawn.x * TILE; player.y = spawn.y * TILE; player.vx = 0; player.vy = 0; }
+  }
+
+  function draw() {
+    ctx.fillStyle = '#87ceeb';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const c = map[y][x];
+        if (c === '#') {
+          ctx.fillStyle = '#8B4513';
+          ctx.fillRect(x * TILE * s, y * TILE * s, TILE * s, TILE * s);
+        }
+        if (c === 'E') {
+          ctx.fillStyle = '#aaa';
+          ctx.fillRect(x * TILE * s, y * TILE * s, TILE * s, TILE * s);
+        }
+      }
+    }
+    ctx.fillStyle = '#ff3b3b';
+    ctx.fillRect(player.x * s, player.y * s, 12 * s, 14 * s);
+  }
+
+  function loop() {
+    if (state.started) step();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  const state = { started: false };
+
+  btnStart.addEventListener('click', async () => {
+    state.started = true;
+    startOverlay.classList.remove('show');
+    try { if (chkMusic.checked) await music.play(); } catch {}
+  });
+
+  loop();
 })();
